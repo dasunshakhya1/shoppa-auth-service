@@ -1,9 +1,12 @@
 import mysql from 'mysql2'
 
 const connectionPool = mysql.createPool({
-    password: "root", user: "root", host: "localhost", database: "users"
+    password: process.env.DB_PASSWORD,
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST_URL,
+    database: process.env.DB_SCHEMA
 })
 
-export  const POOL = connectionPool.promise()
+export const POOL = connectionPool.promise()
 
 
