@@ -1,22 +1,33 @@
-import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import crypto from "crypto";
 
-export const hashPassword = async (password) => {
-    const salt = await bcrypt.genSalt()
-    return bcrypt.hash(password, salt)
+
+export const genPassword = (password) => {
+    const salt = crypto.randomBytes(32).toString('hex')
+    const hash = crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex')
+    return {salt, hash}
 }
 
-export const comparePassword = (providedPassword, dbPassword) => {
-    return bcrypt.compare(providedPassword, dbPassword)
+
+export const validatePassword = (password, hash, salt) => {
+    const generatedHash = crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex')
+    return hash === generatedHash
 }
 
+export const issueJWT = (user) => {
+    const {_id} = user
+    const expiresIn = '15m'
 
-export const jwtSign = (data) => {
-    return jwt.sign(data, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '30m' })
-}
+    const payload = {
+        sub: _id,
+        iat: Date.now()
+    }
 
-export const jwtVerify = (req,res) => {
-    jwt.verify(data, process.env.ACCESS_TOKEN_SECRET,(err,data)=>{
+    const signedToken = jwt.sign(payload, process.env.PRIVATE_KEY, {expiresIn, algorithm: 'RS256'})
 
-    })
+
+    return {
+        token: "Bearer " + signedToken,
+        expires: expiresIn
+    }
 }
